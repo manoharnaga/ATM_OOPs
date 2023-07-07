@@ -4,11 +4,24 @@ typedef long long ll;
 #define MOD 1000000007
 #define cline cout<<"------------------------------------------------------------\n"
 #define nline cout<<"\n"
-
+#define PRESSKEY cout<<"\n\t\t<<PRESS ENTER TO CONTINUE>>\n"
 // 
 
 void clrScreen(){
     system("clear");
+}
+
+void nextPage(){
+    PRESSKEY;
+    cin.ignore();
+    cin.get();
+    clrScreen();
+}
+
+void exitATM(){
+    clrScreen();
+    cout<<"Thank you for using the ATM.\n";
+    exit(1);
 }
 
 class user{
@@ -49,7 +62,6 @@ public:
     }
 
     void cashwithDraw(){
-        clrScreen();
         long double cash;
         cout<<"Enter the amount in rupees:\t";
         cin>>cash;
@@ -64,7 +76,6 @@ public:
     }
 
     void showUser(){
-        clrScreen();
         cout<<"Name:\t"<<name<<"\n";
         cout<<"Account.No:\t"<<accountNo<<"\n";
         cout<<"Phone.No:\t"<<phoneNo<<"\n";
@@ -101,6 +112,9 @@ public:
     }
     int ui1(){
         clrScreen();
+        cline;
+        cout<<"WELCOME TO ManoAtm!!\n";
+        cline;
         cout<<"1. Login\n";
         cout<<"2. Signup\n";
         cout<<"3. Quit\n";
@@ -108,41 +122,61 @@ public:
         cin>>inp;
         if(inp==1){
             login();
-            return 0;
         }
         else if(inp==2){
             signup();
             return 1;
         }
         else{
-            exit(1);
+            exitATM();
         }
+        return 0;
+    }
+
+    int check(ll acNo,string name,int pin,ll phNo,long double curbal){
+        int f=1;
+        for(char ch: name){
+            if((ch>='A' && ch<='Z') || (ch>='a' && ch<='z')) continue;
+            f=0;
+            break;
+        }
+        int cnt=0;
+        while(pin){
+            pin/=10;cnt++;
+        }
+        int pinflag=(cnt==4);
+        cnt=0;
+        while(phNo){
+            phNo/=10;cnt++;
+        }
+        int phNoflag=(cnt==10);
+        return  pinflag && phNoflag && (curbal>=0.0) && f;
     }
 
     void login(){
-        loginline:
         clrScreen();
         cout<<"Account Number:\t";
         ll acNo;
         cin>>acNo;
         int ind=findUser(uarr,acNo,sz);
         if(ind==-1){
+            clrScreen();
             cout<<"No account Found,Please try again\n";
-            // getchar();
-            // ui1();
+            nextPage();
+            ui1();
             return;
         }
-        
+        clrScreen();
         cout<<"Enter 4-digit pin:\t";
         int pin;
         cin>>pin;
-        
+        clrScreen();
         if(uarr[ind].getPIN()!=pin){
             cout<<"PIN INVALID!!\n";
-            goto loginline;
+            nextPage();
+            ui1();
         }
         else{
-            clrScreen();
             cout<<"Select an option from below:\n";
             cout<<"1.Check Balance\n";
             cout<<"2.Cash WithDrawal\n";
@@ -151,32 +185,41 @@ public:
             cout<<"5.Quit\n";
             int inp;
             cin>>inp;
+            clrScreen();
             if(inp==1){
                 cout<<"Your Current Account Balance:\t"<<uarr[ind].getBalance()<<"/-\n rupees only\n";
+                nextPage();
             }
             else if(inp==2){
                 uarr[ind].cashwithDraw();
+                nextPage();
             }
             else if(inp==3){
                 uarr[ind].showUser();
+                nextPage();
             }
             else if(inp==4){
-                phline:
                 ll oldNo,newNo;
                 cout<<"Enter Old Number:\t";
                 cin>>oldNo;
                 cout<<"Enter New Number:\t";
                 cin>>newNo;
-                if(!uarr[ind].updateMobileNo(oldNo,newNo)) goto phline;
+                if(!uarr[ind].updateMobileNo(oldNo,newNo)){
+                    nextPage();
+                    ui1();
+                }
+                else{
+                    nextPage();
+                }
             }
             else{
-                cout<<"Kuch Nahi\n";
-                exit(1);
+                exitATM();
             }
         }
     }
 
     void signup(){
+        clrScreen();
         string name;
         ll acNo,phNo;
         int pin;
@@ -191,10 +234,18 @@ public:
         cin>>curbal;
         cout<<"Phone.No:\t";
         cin>>phNo;
+        if(!check(acNo,name,pin,phNo,curbal)){
+            cout<<"INVALID CREDENTIALS!";
+            nextPage();
+            ui1();
+            return;
+        }
         user u1(acNo,name,pin,phNo,curbal);
         sz++;
         uarr[sz-1]=u1;
-        cout<<"Congratulations,your account is created!!\n";
+        clrScreen();
+        cout<<"\tCongratulations,your account is created!!\n";
+        nextPage();
     }
     static int sz;
 };
@@ -206,11 +257,6 @@ int ui::sz = 0;
 
 
 int main(){
-
-
-    cline;
-    cout<<"WELCOME TO ManoAtm!!\n";
-    cline;
     while(1){
         ui* ptr = new ui();
         if(ptr->ui1()) ptr->ui1();
